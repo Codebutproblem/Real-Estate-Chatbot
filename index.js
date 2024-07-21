@@ -12,6 +12,10 @@ const port = 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'Welcome to the Real Estate Chatbot API' });
+});
+
 app.post('/agent', async (req, res) => {
     const input = req.body.input;
     const result = await askQuestion(input);
