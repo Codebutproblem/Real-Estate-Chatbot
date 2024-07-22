@@ -8,8 +8,6 @@ import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { createRetrieverTool } from "langchain/tools/retriever";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
-import { StructuredOutputParser } from "langchain/output_parsers";
-import { z } from "zod";
 dotenv.config();
 
 const model = new ChatGoogleGenerativeAI({
@@ -67,29 +65,6 @@ export const createAgent = async (tools) => {
 
     return agentExecutor;
 };
-
-export async function callZodOutputParser(input) {
-    const prompt = ChatPromptTemplate.fromTemplate(
-        `Extract information from the following phrase. 
-         Formatting Instructions: {format_instructions} 
-         Phrase: {phrase}`
-    );
-
-    const outputParser = StructuredOutputParser.fromZodSchema(
-        z.object({
-            date: z.string().describe("a scheduled date"),
-        })
-    );
-
-    const chain = prompt.pipe(model).pipe(outputParser);
-
-    return await chain.invoke({
-        phrase: input,
-        format_instructions: outputParser.getFormatInstructions(),
-    });
-}
-
-
 
 
 const retriever = await createRetriever();
