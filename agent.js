@@ -46,7 +46,7 @@ const createRetriever = async () => {
 
 export const createAgent = async (tools) => {
     const prompt = ChatPromptTemplate.fromMessages([
-        ("system", "You are a helpful assistant."),
+        ("system", "You are a real estate consultant."),
         new MessagesPlaceholder("chat_history"),
         ("human", "{input}"),
         new MessagesPlaceholder("agent_scratchpad"),
@@ -70,7 +70,7 @@ const retriever = await createRetriever();
 const searchTool = new TavilySearchResults();
 const retrieverTool = createRetrieverTool(retriever, {
     name: "real_estate_retriever",
-    description: "Use this tool when looking up the real estate data provided"
+    description: "Use this tool to provide information about the real estate data provided"
 });
 const tools = [searchTool, retrieverTool];
 
