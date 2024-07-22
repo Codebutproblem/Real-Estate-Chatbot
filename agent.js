@@ -8,6 +8,8 @@ import { AgentExecutor, createOpenAIFunctionsAgent } from "langchain/agents";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { createRetrieverTool } from "langchain/tools/retriever";
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { StructuredOutputParser } from "langchain/output_parsers";
+import { z } from "zod";
 dotenv.config();
 
 const model = new ChatGoogleGenerativeAI({
@@ -46,7 +48,7 @@ const createRetriever = async () => {
 
 export const createAgent = async (tools) => {
     const prompt = ChatPromptTemplate.fromMessages([
-        ("system", "You are a real estate consultant."),
+        ("system", "You are a helpful assistant."),
         new MessagesPlaceholder("chat_history"),
         ("human", "{input}"),
         new MessagesPlaceholder("agent_scratchpad"),
@@ -66,11 +68,35 @@ export const createAgent = async (tools) => {
     return agentExecutor;
 };
 
+export async function callZodOutputParser(input) {
+    const prompt = ChatPromptTemplate.fromTemplate(
+        `Extract information from the following phrase. 
+         Formatting Instructions: {format_instructions} 
+         Phrase: {phrase}`
+    );
+
+    const outputParser = StructuredOutputParser.fromZodSchema(
+        z.object({
+            date: z.string().describe("a scheduled date"),
+        })
+    );
+
+    const chain = prompt.pipe(model).pipe(outputParser);
+
+    return await chain.invoke({
+        phrase: input,
+        format_instructions: outputParser.getFormatInstructions(),
+    });
+}
+
+
+
+
 const retriever = await createRetriever();
 const searchTool = new TavilySearchResults();
 const retrieverTool = createRetrieverTool(retriever, {
     name: "real_estate_retriever",
-    description: "Use this tool to provide information about the real estate data provided"
+    description: "Use this tool when looking up the real estate data provided"
 });
 const tools = [searchTool, retrieverTool];
 
@@ -79,7 +105,7 @@ const agent = await createAgent(tools);
 const chatHistory = [];
 
 export const askQuestion = async (input) => {
-    if(input === "!delete"){
+    if (input === "!delete") {
         chatHistory.splice(0, chatHistory.length);
         return "Chat history has been deleted";
     }
